@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">YourProject</string>
+    <string name="button_send">Send</string>
+    <string name="title_first_name">First Name</string>
+    <string name="title_last_name">Last Name</string>
+    <string name="title_location">Location</string>
 </resources>
