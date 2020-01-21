@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, TableActivity.class);
         EditText editTextFirstName = (EditText) findViewById(R.id.first_name);
         EditText editTextLastName = (EditText) findViewById(R.id.last_name);
-        EditText editTextLocation = (EditText) findViewById(R.id.last_name);
+        EditText editTextLocation = (EditText) findViewById(R.id.location);
         // TODO: Add location from phone GPS.
 
         String firstName = editTextFirstName.getText().toString();
