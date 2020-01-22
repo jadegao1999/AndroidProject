@@ -23,7 +23,6 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "tag";
     public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
-    public int nextId;
 
     private FirebaseFirestore db; // Firebase realtime DB ref
 
@@ -36,20 +35,28 @@ public class MainActivity extends AppCompatActivity {
 
     /** Called when the user taps the Send button */
     public void sendMessage(View view) {
-        Intent intent = new Intent(this, TableActivity.class);
+        final Intent intent = new Intent(this, TableActivity.class);
         EditText editTextFirstName = (EditText) findViewById(R.id.first_name);
         EditText editTextLastName = (EditText) findViewById(R.id.last_name);
-        EditText editTextLocation = (EditText) findViewById(R.id.last_name);
-        // TODO: Add location from phone GPS.
+        EditText editTextLocation = (EditText) findViewById(R.id.location);
 
-        String firstName = editTextFirstName.getText().toString();
-        String lastName = editTextLastName.getText().toString();
-        String location = editTextLocation.getText().toString();
+        final String firstName = editTextFirstName.getText().toString();
+        final String lastName = editTextLastName.getText().toString();
+        final String location = editTextLocation.getText().toString();
 
-        // TODO: Make connection to backend and store the data.
-        addNewUser(firstName, lastName, location);
-
-        startActivity(intent);
+        // Use callbacks to handle async api connections.
+        getNextUserId(new FirestoreCallback() {
+            @Override
+            public void onCallback(int nextId) {
+                addNewUser(nextId, firstName, lastName, location, new FirestoreCallback() {
+                    @Override
+                    public void onCallback(int nextId) {
+                        startActivity(intent);
+                    }
+                });
+                updateUserCount(nextId);
+            }
+        });
     }
 
     /** Called when the user taps the All users button */
@@ -58,45 +65,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void addNewUser(String firstName, String lastName, String location) {
+    /** Add a new user to Firestore DB. */
+    public void addNewUser(int id, String firstName, String lastName, String location, final FirestoreCallback callback) {
         // Create a new user with id, first, last name and location.
         Map<String, Object> user = new HashMap<>();
-        DocumentReference docRef = db.collection("user_count").document("0");
 
-        // Fetch nextId from DB.
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-
-                    if (document.exists()) {
-                        nextId = Integer.parseInt(document.getString("count")) + 1;
-                        Log.d(TAG, "nextId = " + document.getData());
-                    } else {
-                        Log.d(TAG, "No such document");
-                    }
-                } else {
-                    Log.d(TAG, "get failed with ", task.getException());
-                }
-            }
-        });
-        // Update user count in DB.
-        docRef.update("count", String.valueOf(nextId))
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully updated!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error updating document", e);
-                    }
-                });
-
-        String newId = String.valueOf(nextId);
+        String newId = String.valueOf(id);
         user.put("id", newId);
         user.put("firstName", firstName);
         user.put("lastName", lastName);
@@ -108,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
+                        callback.onCallback(0 /* random number, no use */);
                         Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
                     }
                 })
@@ -119,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    public String getNextUserId() {
+    /** Get the total users count and generate id for next user. */
+    public void getNextUserId(final FirestoreCallback callback) {
         DocumentReference docRef = db.collection("user_count").document("0");
 
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -129,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     DocumentSnapshot document = task.getResult();
 
                     if (document.exists()) {
-                        nextId = Integer.parseInt(document.getString("count")) + 1;
+                        callback.onCallback(Integer.parseInt(document.getString("count")) + 1);
                         Log.d(TAG, "nextId = " + document.getData());
                     } else {
                         Log.d(TAG, "No such document");
@@ -139,6 +115,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /** Update the total user count in Firestore DB. */
+    public void updateUserCount(int nextId) {
+        DocumentReference docRef = db.collection("user_count").document("0");
+
         docRef.update("count", String.valueOf(nextId))
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -152,6 +134,10 @@ public class MainActivity extends AppCompatActivity {
                         Log.w(TAG, "Error updating document", e);
                     }
                 });
-        return String.valueOf(this.nextId);
+    }
+
+    /** Interface to handle async functions. */
+    private interface FirestoreCallback {
+        void onCallback(int nextId);
     }
 }

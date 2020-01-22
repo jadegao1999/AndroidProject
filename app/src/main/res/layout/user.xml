@@ -8,6 +8,7 @@ android:layout_height="match_parent">
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:fontFamily="monospace"
         android:text="ID"
         android:textColor="#000" />
 
@@ -16,7 +17,7 @@ android:layout_height="match_parent">
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:fontFamily="serif"
+        android:fontFamily="monospace"
         android:text="First Name"
         android:textColor="#000" />
 
@@ -25,6 +26,7 @@ android:layout_height="match_parent">
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:fontFamily="monospace"
         android:text="Last Name"
         android:textColor="#000" />
 
@@ -33,6 +35,7 @@ android:layout_height="match_parent">
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:fontFamily="monospace"
         android:text="Location"
         android:textColor="#000" />
 </LinearLayout>
